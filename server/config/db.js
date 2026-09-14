@@ -1,4 +1,4 @@
-import mongoose, { connect } from "mongoose";
+import mongoose from "mongoose";
 
 
 const connectDB = async () => {
@@ -7,7 +7,10 @@ const connectDB = async () => {
     await mongoose.connect(`${process.env.MONGODB_URI}/hotel-booking`)
 
   } catch (error) {
-    console.log(error.message)
+    // console.log(error.message)
+    console.error("Database connection failed:", error.message);
+    process.exit(1);
+
   }
 }
 

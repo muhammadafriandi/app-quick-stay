@@ -15,16 +15,21 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"]
     }
 
-    await whook.verify(JSON.stringify(req.body), headers)
+    // req.body is a Buffer because of express.raw()
+    const payload = req.body.toString();
+
+    await whook.verify(payload, headers)
 
     // Getting Data from requset body
-    const { data, type } = req.body
+    const { data, type } = JSON.parse(payload)
 
     const userData = {
       _id: data.id,
-      email: data.email.address[0].email_address,
-      username: data.first_name + " " + data.last_name,
-      image: data.image_url,
+      email: data.email.addresses?.[0]?.email_address || "",
+      // username: data.first_name + " " + data.last_name,
+      username: `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
+        "User",
+      image: data.image_url || "",
     }
 
     // Switch cases for different Events
@@ -43,11 +48,11 @@ const clerkWebhooks = async (req, res) => {
         break;
     }
 
-    res.json({ success: true, message: "Webhook Received" })
+    res.status(200).json({ success: true, message: "Webhook Received" })
 
   } catch (error) {
     console.log(error.message)
-    res.json({ success: false, message: error.message })
+    res.status(400).json({ success: false, message: error.message })
   }
 }
 

@@ -1,5 +1,5 @@
 import dns from "dns";
-import exprees from 'express'
+import express from 'express'
 import 'dotenv/config'
 import cors from 'cors'
 import connectDB from './config/db.js'
@@ -9,15 +9,23 @@ import clerkWebhooks from "./conrollers/clerkWebhooks.js";
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
-const app = exprees()
+const app = express()
 
 connectDB()
+
+//  Clerk webhook MUST receive raw body
+app.post(
+  "/api/clerk",
+  express.raw({ type: "application/json" }),
+  clerkWebhooks
+);
+
 
 app.use(cors()) //Enable Cors Origin Resource Sharing
 
 
 // Middleware
-app.use(exprees.json())
+app.use(express.json())
 app.use(clerkMiddleware())
 
 // API to listen to Clerk Webhooks

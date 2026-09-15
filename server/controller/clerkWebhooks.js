@@ -13,11 +13,14 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     }
 
+    // req.body is a Buffer because of express.raw()
+    const payload = req.body.toString("utf8");
+
     // Verifying Headers
-    await whook.verify(JSON.stringify(req.body), headers)
+    await whook.verify(payload, headers)
 
     // Getting data from request body
-    const { data, type } = req.body
+    const { data, type } = JSON.parse(payload)
 
     const userData = {
       _id: data.id,

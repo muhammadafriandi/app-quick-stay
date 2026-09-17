@@ -7,11 +7,24 @@ const clerkWebhooks = async (req, res) => {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
 
     // Getting Headers
-    const headers = {
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"],
+    const svixId = req.headers["svix-id"]
+    const svixTimestamp = req.headers["svix-timestamp"]
+    const svixSignature = req.headers["svix-signature"]
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing Svix headers",
+      })
     }
+
+    const headers = {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    }
+
+
 
     // req.body is a Buffer because of express.raw()
     // const payload = req.body.toString("utf8");
@@ -24,20 +37,20 @@ const clerkWebhooks = async (req, res) => {
 
     // Getting data from request body
     const { data, type } = JSON.parse(payload)
+    const username =
+      `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
+      email.split("@")[0]
 
     const userData = {
       _id: data.id,
-      email: data.email_addresses?.[0]?.email_address || "",
-      username: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+      email,
+      username: username,
       image: data.image_url || "",
     }
 
     // Switch Cases for different Events
     switch (type) {
-      case "user.created": {
-        await User.create(userData);
-        break;
-      }
+      case "user.created":
 
       case "user.updated": {
         await User.findByIdAndUpdate(data.id, userData);

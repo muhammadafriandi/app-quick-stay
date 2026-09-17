@@ -23,24 +23,60 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false)
   const [searchedCities, setSearchedCities] = useState([])
 
+  // const fetchUser = async () => {
+  //   try {
+  //     const token = await getToken()
+
+  //     console.log("TOKEN:", token)
+
+  //     const { data } = await axios.get('/api/user', { headers: { Authorization: `Bearer ${await getToken()}` } })
+
+  //     if (data.success) {
+  //       setIsOwner(data.role === "hotelOwner")
+  //       setSearchedCities(data.recentSearchedCities)
+  //     } else {
+  //       // Retry Fetching User Details after 5 second
+  //       setTimeout(() => {
+  //         fetchUser()
+  //       }, 5000)
+  //     }
+
+  //   } catch (error) {
+  //     toast.error(error.message)
+  //   }
+  // }
+
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get('/api/user', { headers: { Authorization: `Bearer ${await getToken()}` } })
+      const token = await getToken()
+
+      console.log("TOKEN:", token)
+
+      if (!token) {
+        console.log("No Clerk token available")
+        return
+      }
+
+      const { data } = await axios.get('/api/user', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      console.log("USER RESPONSE:", data)
 
       if (data.success) {
         setIsOwner(data.role === "hotelOwner")
-        setSearchedCities(data.recentSearchedCities)
+        setSearchedCities(data.recentSearchedCities || [])
       } else {
-        // Retry Fetching User Details after 5 second
-        setTimeout(() => {
-          fetchUser()
-        }, 5000)
+        setTimeout(fetchUser, 5000)
       }
-
     } catch (error) {
-      toast.error(error.message)
+      console.error("fetchUser error:", error)
+      toast.error(error.response?.data?.message || error.message)
     }
   }
+
 
   useEffect(() => {
     if (user) {

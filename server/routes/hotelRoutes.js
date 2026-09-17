@@ -6,4 +6,4 @@ const hotelRouter = express.Router()
 
 hotelRouter.post('/', protect, registerHotel)
 
-ex
+export default hotelRouter

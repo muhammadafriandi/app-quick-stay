@@ -14,10 +14,13 @@ const clerkWebhooks = async (req, res) => {
     }
 
     // req.body is a Buffer because of express.raw()
+    // const payload = req.body.toString("utf8");
     const payload = req.body.toString("utf8");
+    await whook.verify(payload, headers);
+
 
     // Verifying Headers
-    await whook.verify(payload, headers)
+    // await whook.verify(payload, headers)
 
     // Getting data from request body
     const { data, type } = JSON.parse(payload)
@@ -40,6 +43,7 @@ const clerkWebhooks = async (req, res) => {
         await User.findByIdAndUpdate(data.id, userData);
         break;
       }
+
 
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);

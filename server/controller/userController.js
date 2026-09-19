@@ -3,32 +3,78 @@ import User from "../models/User.js"
 // GET /api/user
 export const getUserData = async (req, res) => {
   try {
-    const role = req.user.role
-    const recentSearchedCities = req.user.recentSearchedCities
-    res.status(200).json({ success: true, recentSearchedCities })
+    const user = req.user;
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        image: user.image,
+        role: user.role,
+      },
+
+      role: user.role,
+      recentSearchedCities: user.recentSearchedCities || [],
+    });
 
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message })
+    console.error("getUserData error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-}
+};
 
-// Store user recent searched cities
-export const storeRecentSearchedCitites = async (req, res) => {
+// POST /api/user/recent-search
+export const storeRecentSearchedCities = async (req, res) => {
   try {
-    const { recentSearchedCity } = req.body
-    const user = await req.user
+    const { recentSearchedCity } = req.body;
 
-    if (user.recentSearchedCities.length < 3) {
-      user.recentSearchedCities.push(recentSearchedCity)
-    } else {
-      user.recentSearchedCities.shift()
-      user.recentSearchedCities.push(recentSearchedCity)
+    if (!recentSearchedCity) {
+      return res.status(400).json({
+        success: false,
+        message: "City is required",
+      });
     }
 
-    await User.save()
-    res.status(201).json({ success: true, message: "City Added" })
+    const user = req.user;
 
+    if (!user.recentSearchedCities) {
+      user.recentSearchedCities = [];
+    }
+
+    // Avoid duplicate city
+    user.recentSearchedCities = user.recentSearchedCities.filter(
+      (city) => city !== recentSearchedCity
+    );
+
+    // Add city to the end
+    user.recentSearchedCities.push(recentSearchedCity);
+
+    // Keep only the latest 3 cities
+    if (user.recentSearchedCities.length > 3) {
+      user.recentSearchedCities =
+        user.recentSearchedCities.slice(-3);
+    }
+
+    await user.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "City Added",
+      recentSearchedCities: user.recentSearchedCities,
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message })
+    console.error("storeRecentSearchedCities error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-}
+};
+

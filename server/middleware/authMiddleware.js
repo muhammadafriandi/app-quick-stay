@@ -1,15 +1,9 @@
+import { getAuth } from "@clerk/express"
 import User from "../models/User.js"
 
-
-// Middleware to check if user is Authenticated
 export const protect = async (req, res, next) => {
   try {
-    console.log("AUTH:", req.auth)
-
-
-    // const { userId } = req.auth
-    const userId = req.auth?.userId
-
+    const { userId } = getAuth(req)
 
     if (!userId) {
       return res.status(401).json({
@@ -17,8 +11,10 @@ export const protect = async (req, res, next) => {
         message: "Not Authenticated",
       })
     }
+    // console.log("Clerk userId:", userId)
 
-    const user = await User.findById(userId)
+    const user = await User.findById(userId);
+    // console.log("MongoDB user:", user);
 
     if (!user) {
       return res.status(404).json({
@@ -28,14 +24,15 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = user
+
     next()
+
   } catch (error) {
-    console.error(error)
+    console.error("Protect middleware error:", error);
 
-    res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: error.message,
-    })
+      message: error.message || "Authentication failed",
+    });
   }
-
 }

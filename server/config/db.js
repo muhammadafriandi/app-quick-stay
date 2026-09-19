@@ -25,13 +25,14 @@ const connectDB = async () => {
   try {
     // Already connected
     if (mongoose.connection.readyState === 1) {
+      console.log(`Database already connected: ${mongoose.connection.name}`);
       return;
     }
 
     // Connection is currently being established
-    if (mongoose.connection.readyState === 2) {
-      return;
-    }
+    // if (mongoose.connection.readyState === 2) {
+    //   return;
+    // }
 
     const mongoURI = process.env.MONGODB_URI;
 
@@ -39,9 +40,8 @@ const connectDB = async () => {
       throw new Error("MONGODB_URI is not configured");
     }
 
-    await mongoose.connect(mongoURI);
-
-    console.log("Database connected");
+    await mongoose.connect(mongoURI, { dbName: "hotel-booking" });
+    console.log(`Database connected: ${mongoose.connection.name}`);
   } catch (error) {
     console.error("Database connection error:", error.message);
     throw error;

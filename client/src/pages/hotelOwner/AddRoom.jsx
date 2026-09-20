@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
-import Title from "../../components/Title";
-import { assets } from "../../assets/assets";
-import toast from "react-hot-toast";
-import { useAppContext } from "../../context/AppContext";
+import React, { useEffect, useState } from "react"
+import Title from "../../components/Title"
+import { assets } from "../../assets/assets"
+import toast from "react-hot-toast"
+import { useAppContext } from "../../context/AppContext"
 
 const AddRoom = () => {
-  const { axios, getToken } = useAppContext();
+  const { axios, getToken } = useAppContext()
 
   const [images, setImages] = useState({
     1: null,
     2: null,
     3: null,
     4: null,
-  });
+  })
 
   const [inputs, setInputs] = useState({
     roomType: "",
@@ -24,60 +24,47 @@ const AddRoom = () => {
       "Mountain View": false,
       "Pool Access": false,
     },
-  });
+  })
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  // =====================================================
-  // Cleanup object URLs
-  // =====================================================
   useEffect(() => {
     return () => {
       Object.values(images).forEach((image) => {
         if (image) {
-          URL.revokeObjectURL(URL.createObjectURL(image));
+          URL.revokeObjectURL(URL.createObjectURL(image))
         }
-      });
-    };
-  }, [images]);
+      })
+    }
+  }, [images])
 
-  // =====================================================
-  // Handle image change
-  // =====================================================
   const handleImageChange = (key, file) => {
-    if (!file) return;
+    if (!file) return
 
     // Check file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
+      toast.error("Please select an image file")
+      return
     }
 
-    // Check file size - max 5MB
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size must be less than 5MB");
-      return;
+      toast.error("Image size must be less than 5MB")
+      return
     }
 
     setImages((prev) => ({
       ...prev,
       [key]: file,
-    }));
-  };
+    }))
+  }
 
-  // =====================================================
-  // Remove image
-  // =====================================================
   const removeImage = (key) => {
     setImages((prev) => ({
       ...prev,
       [key]: null,
-    }));
-  };
+    }))
+  }
 
-  // =====================================================
-  // Reset form
-  // =====================================================
   const resetForm = () => {
     setInputs({
       roomType: "",
@@ -89,137 +76,104 @@ const AddRoom = () => {
         "Mountain View": false,
         "Pool Access": false,
       },
-    });
+    })
 
     setImages({
       1: null,
       2: null,
       3: null,
       4: null,
-    });
-  };
+    })
+  }
 
-  // =====================================================
-  // Submit
-  // =====================================================
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    // ---------------------------------------------
-    // Validate room type
-    // ---------------------------------------------
     if (!inputs.roomType) {
-      toast.error("Please select a room type");
-      return;
+      toast.error("Please select a room type")
+      return
     }
 
-    // ---------------------------------------------
-    // Validate price
-    // ---------------------------------------------
     if (
       !inputs.pricePerNight ||
       Number(inputs.pricePerNight) <= 0
     ) {
-      toast.error("Please enter a valid price");
-      return;
+      toast.error("Please enter a valid price")
+      return
     }
 
-    // ---------------------------------------------
-    // Get selected amenities
-    // ---------------------------------------------
     const selectedAmenities = Object.keys(inputs.amenities).filter(
       (key) => inputs.amenities[key]
-    );
+    )
 
     if (selectedAmenities.length === 0) {
-      toast.error("Please select at least one amenity");
-      return;
+      toast.error("Please select at least one amenity")
+      return
     }
 
-    // ---------------------------------------------
-    // Get selected images
-    // ---------------------------------------------
     const selectedImages = Object.values(images).filter(
       (image) => image !== null
-    );
+    )
 
     if (selectedImages.length === 0) {
-      toast.error("Please upload at least one room image");
-      return;
+      toast.error("Please upload at least one room image")
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      // ---------------------------------------------
-      // Create FormData
-      // ---------------------------------------------
-      const formData = new FormData();
+      const formData = new FormData()
 
-      formData.append(
-        "roomType",
-        inputs.roomType
-      );
+      formData.append("roomType", inputs.roomType)
 
-      formData.append(
-        "pricePerNight",
-        String(inputs.pricePerNight)
-      );
+      formData.append("pricePerNight", String(inputs.pricePerNight))
 
-      formData.append(
-        "amenities",
-        JSON.stringify(selectedAmenities)
-      );
+      formData.append("amenities", JSON.stringify(selectedAmenities))
 
-      // ---------------------------------------------
-      // Append images
-      // ---------------------------------------------
       selectedImages.forEach((image) => {
-        formData.append("images", image);
-      });
+        formData.append("images", image)
+      })
 
-      // ---------------------------------------------
-      // Get token
-      // ---------------------------------------------
-      const token = await getToken();
+      const token = await getToken()
 
-      // ---------------------------------------------
-      // Send request
-      // ---------------------------------------------
+      if (!token) {
+        toast.error("Authentication token not available")
+        return
+      }
+
+
       const { data } = await axios.post(
-        "/api/rooms/",
+        "/api/rooms",
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
-      );
+      )
 
-      // ---------------------------------------------
-      // Success
-      // ---------------------------------------------
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message)
 
-        resetForm();
+        resetForm()
       } else {
         toast.error(
           data.message || "Failed to create room"
-        );
+        )
       }
     } catch (error) {
-      console.error("Add room error:", error);
+      console.error("Add room error:", error)
 
       toast.error(
         error.response?.data?.message ||
         error.message ||
         "Something went wrong"
-      );
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={onSubmitHandler}>
@@ -230,9 +184,6 @@ const AddRoom = () => {
         subTitle="Fill in the details carefully and accurately to enhance the user booking experience."
       />
 
-      {/* =====================================================
-          IMAGES
-      ====================================================== */}
       <p className="text-gray-800 mt-10">
         Images
       </p>
@@ -352,9 +303,6 @@ const AddRoom = () => {
         </div>
       </div>
 
-      {/* =====================================================
-          AMENITIES
-      ====================================================== */}
       <p className="text-gray-800 mt-6">
         Amenities
       </p>
@@ -397,9 +345,6 @@ const AddRoom = () => {
         )}
       </div>
 
-      {/* =====================================================
-          SUBMIT
-      ====================================================== */}
       <button
         type="submit"
         disabled={loading}
@@ -413,7 +358,7 @@ const AddRoom = () => {
           : "Add Room"}
       </button>
     </form>
-  );
-};
+  )
+}
 
 export default AddRoom

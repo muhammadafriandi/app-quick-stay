@@ -11,28 +11,20 @@ export const protect = async (req, res, next) => {
         message: "Not Authenticated",
       })
     }
-    // console.log("Clerk userId:", userId)
 
-    const user = await User.findById(userId);
-    // console.log("MongoDB user:", user);
+    const user = await User.findById(userId)
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      })
+      return res.status(404).json({ success: false, message: "User not found", })
     }
 
     req.user = user
+    // req.auth = getAuth(req)
 
     next()
 
   } catch (error) {
-    console.error("Protect middleware error:", error);
-
-    return res.status(401).json({
-      success: false,
-      message: error.message || "Authentication failed",
-    });
+    console.error("Protect middleware error:", error)
+    return res.status(401).json({ success: false, message: error.message || "Authentication failed", })
   }
 }

@@ -1,18 +1,18 @@
+import { getAuth } from "@clerk/express";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import { v2 as cloudinary } from "cloudinary";
 
-// =====================================================
-// CREATE ROOM
-// =====================================================
+
+
 export const createRoom = async (req, res) => {
   try {
+    const { userId } = getAuth(req)
     const { roomType, pricePerNight, amenities, } = req.body;
 
     if (!req.auth?.userId) {
       return res.status(401).json({ success: false, message: "Unauthorized", })
     }
-    console.log("user", req.auth.userId)
 
     if (!roomType) {
       return res.status(400).json({ success: false, message: "Room type is required", })
@@ -23,7 +23,9 @@ export const createRoom = async (req, res) => {
     if (isNaN(price) || price <= 0) {
       return res.status(400).json({ success: false, message: "Please enter a valid room price" })
     }
-    const hotel = await Hotel.findOne({ owner: req.auth.userId })
+    console.log("userID", userId)
+
+    const hotel = await Hotel.findOne({ owner: userId })
 
     if (!hotel) {
       return res.status(404).json({ success: false, message: "No hotel found for this owner" })
@@ -36,7 +38,8 @@ export const createRoom = async (req, res) => {
     let parsedAmenities = [];
 
     try {
-      parsedAmenities = JSON.parse(amenities || "[]");
+      parsedAmenities = JSON.parse(amenities || "[]")
+
     } catch (error) {
       return res.status(400).json({ success: false, message: "Invalid amenities format" })
     }
@@ -45,9 +48,6 @@ export const createRoom = async (req, res) => {
       return res.status(400).json({ success: false, message: "Amenities must be an array" })
     }
 
-    // ---------------------------------------------
-    // Upload images to Cloudinary
-    // ---------------------------------------------
     const uploadImages = req.files.map(async (file) => {
       const response = await cloudinary.uploader.upload(file.path, {
         folder: "hotel-rooms",
@@ -68,9 +68,9 @@ export const createRoom = async (req, res) => {
     });
 
     return res.status(201).json({ success: true, message: "Room created successfully", room, })
+
   } catch (error) {
     console.error("Create room error:", error);
-
     return res.status(500).json({ success: false, message: error.message, })
   }
 }
@@ -102,11 +102,14 @@ export const getRooms = async (req, res) => {
 
 export const getOwnerRooms = async (req, res) => {
   try {
+
     if (!req.auth?.userId) {
       return res.status(401).json({ success: false, message: "Unauthorized", })
     }
 
-    const hotel = await Hotel.findOne({ owner: req.auth.userId })
+    const { userId } = getAuth(req)
+
+    const hotel = await Hotel.findOne({ owner: userId })
 
     if (!hotel) {
       return res.status(404).json({ success: false, message: "No hotel found", })

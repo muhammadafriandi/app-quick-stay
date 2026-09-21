@@ -6,7 +6,7 @@ import connectDB from "./config/db.js"
 import { clerkMiddleware } from "@clerk/express"
 
 import clerkWebhooks from "./controller/clerkWebhooks.js"
-import connectCloudinary from "./controller/cloudinary.js"
+import connectCloudinary from "./config/cloudinary.js"
 
 import roomRouter from "./routes/roomRoutes.js"
 import hotelRouter from "./routes/hotelRoutes.js"

@@ -12,6 +12,7 @@ import roomRouter from "./routes/roomRoutes.js"
 import hotelRouter from "./routes/hotelRoutes.js"
 import bookingRouter from "./routes/bookingRoutes.js"
 import userRouter from "./routes/userRoutes.js"
+import { stripeWebhooks } from "./controller/stripeWebhooks.js"
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(cors({ origin: true, credentials: true }))
 // app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }))
 
+app.post('/api/stripe/webhook', express.raw({ type: " application/json" }), stripeWebhooks)
 
 // Midddleware
 app.use("/api/clerk", express.raw({ type: "application/json", }), clerkWebhooks)
